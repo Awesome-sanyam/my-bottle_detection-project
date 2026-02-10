@@ -1,0 +1,99 @@
+📘 Part 2: The Full "Start-to-Finish" Operational Manual
+You asked for the full steps. As a Senior Developer, I will structure this as an Standard Operating Procedure (SOP) document. You can copy this directly into your final project report  under "System Implementation."
+
+1. System Startup (Daily Operation)
+This is how you turn the factory line "ON" at the start of a shift.
+
+Step 1: Power on the Raspberry Pi.
+
+Step 2: Open Terminal on your Laptop and SSH in: ssh project_2026@<PI_IP_ADDRESS>
+
+Step 3: Navigate to the project: cd ~/bottle_project
+
+Step 4: Launch the Container (Detached Mode): docker compose up -d (The system will boot, load the TFLite model, and start the camera automatically).
+
+2. System Monitoring (The Dashboard)
+
+Step 1: The Quality Assurance Manager  opens the browser at http://<PI_IP>:8000.
+
+
+Step 2: They monitor the "Real-Time Dashboard".
+
+Step 3: When a defect is found:
+
+The box turns RED (Visual Alert ).
+
+The "Defect Detected" log appears in the list below.
+
+The event is saved to the SQLite database.
+
+3. Admin Configuration (Super Admin Role)
+This fulfills your requirement for "Technical Control".
+
+Step 1: Go to http://<PI_IP>:8000/admin.
+
+Step 2: Login as the Superuser.
+
+Step 3: Click on System Configs.
+
+Step 4: Here you can:
+
+
+Adjust Sensitivity: Change "Confidence Threshold"  (e.g., from 0.60 to 0.75) if false alarms occur.
+
+
+Update Model: Upload a new .tflite file via the "Active Model" field  without touching the code.
+
+4. System Shutdown (End of Shift)
+Step 1: In the SSH terminal: docker compose down (This stops the camera and saves the database state).
+
+🛠️ Part 3: Troubleshooting & Maintenance
+A. How to Check Logs (If it crashes) If the dashboard isn't loading, check the container's output:
+
+Bash
+docker compose logs -f qc-vision
+(Press CTRL+C to exit logs).
+
+B. How to Update the Code If you make changes on your Mac (e.g., changing colors or text):
+
+Sync the changes: rsync -av --exclude '.venv' --exclude '__pycache__' --exclude 'db.sqlite3' core/ project_2026@<PI_IP>:~/bottle_project/core/
+
+Restart the container (Pi automatically picks up file changes): docker compose restart qc-vision
+
+C. How to Reset the Database (Nuclear Option) If you mess up the data and want a clean slate:
+
+docker compose down
+
+rm core/db.sqlite3
+
+docker compose up -d
+
+Re-run the createsuperuser command.
+
+🚀 Senior Developer's Closing Advice
+You have built a system that matches your proposal exactly:
+
+
+Architecture: Edge-to-Fog  (Pi does the work, serves the web page).
+
+
+Hardware: Raspberry Pi 4 Model B.
+
+
+Software: Django + TFLite.
+
+Your project is now in "Production Mode." It is robust, restarts itself if it crashes, and is easy to demonstrate. Go ahead and test the live feed!
+
+
+
+
+
+
+
+
+pkill -9 -f "docker compose" ( It Kill all running task)
+
+hostname -I (IP Address)
+
+ssh project_2026@iotpi.local (Login to SSH)
+
