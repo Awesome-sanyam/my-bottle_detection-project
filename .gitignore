@@ -1,6 +1,0 @@
-# Ignore the ML datasets
-ml_model/dataset/
-
-# Ignore the heavy model files
-ml_models/*.keras
-ml_models/*.h5
