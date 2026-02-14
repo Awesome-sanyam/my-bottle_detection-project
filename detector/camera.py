@@ -3,22 +3,29 @@ import os
 import numpy as np
 import threading
 import time
-import os
 import sys
 from collections import deque
 from django.conf import settings
 from .models import DefectLog, SystemConfig
 
-# --- HYBRID IMPORT LOGIC ---
-# Try to import full TensorFlow (Mac). If that fails, import TFLite Runtime (Pi).
+# --- INTELLIGENT IMPORT LOGIC ---
+# 1. Check which model file exists on the disk
+TFLITE_MODEL_PATH = os.path.join(settings.BASE_DIR, 'ml_model', 'bottle_model_quantized.tflite')
+USE_TFLITE_MODE = os.path.exists(TFLITE_MODEL_PATH)
+
 try:
     import tensorflow as tf
-    USING_TFLITE = False
-    print("🖥️ PLATFORM DETECTED: HIGH-POWER SERVER (Mac/PC)")
+    if USE_TFLITE_MODE:
+        # Use the Interpreter from full TensorFlow
+        Interpreter = tf.lite.Interpreter
+        print(f"⚡ PLATFORM: EDGE DEVICE (Using TensorFlow Lite via Full TF)")
+    else:
+        print(f"🖥️ PLATFORM: HIGH-POWER SERVER (Using Keras)")
 except ImportError:
+    # Fallback for devices with only runtime
     import tflite_runtime.interpreter as tflite
-    USING_TFLITE = True
-    print("⚡ PLATFORM DETECTED: EDGE DEVICE (Raspberry Pi)")
+    Interpreter = tflite.Interpreter
+    print(f"⚡ PLATFORM: EDGE DEVICE (Using TensorFlow Lite Runtime)")
 
 class VideoCamera(object):
     _instance = None
@@ -31,23 +38,25 @@ class VideoCamera(object):
                 cls._instance.initialized = False
                 cls._instance.video = None
                 cls._instance.model = None
-                cls._instance.interpreter = None # For TFLite
+                cls._instance.interpreter = None
                 cls._instance.buffer = deque(maxlen=15)
             return cls._instance
 
     def initialize(self):
         if self.initialized: return
 
-        print("🎥 CAMERA: Opening Hardware...")
-        self.video = cv2.VideoCapture(0)
+        print("🎥 CAMERA: Opening Hardware (V4L2 + MJPEG Force)...")
         
-        # Pi Camera Optimization (Low Resolution for Speed)
-        if USING_TFLITE:
-            self.video.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-            self.video.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-        else:
-            self.video.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-            self.video.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+        # --- CRITICAL PI FIX: Force V4L2 Driver ---
+        self.video = cv2.VideoCapture(0, cv2.CAP_V4L2)
+        
+        # --- CRITICAL PI FIX: Force MJPEG Format ---
+        # This prevents the "Monster Image" / Raw Data crash
+        self.video.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
+        
+        # Set Standard Resolution
+        self.video.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+        self.video.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
         self.load_configuration()
         self.last_log_time = 0
@@ -55,52 +64,67 @@ class VideoCamera(object):
         self.initialized = True
 
     def load_configuration(self):
-        # ... (Config loading logic same as before, skipping for brevity) ...
-        # Default fallback logic:
-        self.min_scan_area = 45000
-        self.defect_trigger = 4
-        
-        # MODEL LOADING
-        if USING_TFLITE:
-            model_path = os.path.join(settings.BASE_DIR, 'ml_model', 'bottle_model_quantized.tflite')
-            print(f"⚡ LOADING TFLITE MODEL: {model_path}")
-            try:
-                self.interpreter = tflite.Interpreter(model_path=model_path)
-                self.interpreter.allocate_tensors()
-                
-                # Get input/output details
-                self.input_details = self.interpreter.get_input_details()
-                self.output_details = self.interpreter.get_output_details()
-                print("✅ TFLITE ENGINE READY")
-            except Exception as e:
-                print(f"❌ TFLITE LOAD ERROR: {e}")
-        else:
-            # Standard Keras Load (Mac)
-            model_path = os.path.join(settings.BASE_DIR, 'ml_model', 'bottle_model_multiclass.keras')
-            print(f"🏭 LOADING KERAS MODEL: {model_path}")
-            try:
-                self.model = tf.keras.models.load_model(model_path)
-                print("✅ KERAS ENGINE READY")
-            except Exception as e:
-                print(f"❌ KERAS LOAD ERROR: {e}")
+        try:
+            self.min_scan_area = 45000
+            self.defect_trigger = 4
+            
+            # --- MODEL LOADING LOGIC ---
+            if USE_TFLITE_MODE:
+                print(f"⚡ LOADING TFLITE MODEL: {TFLITE_MODEL_PATH}")
+                try:
+                    self.interpreter = Interpreter(model_path=TFLITE_MODEL_PATH)
+                    self.interpreter.allocate_tensors()
+                    self.input_details = self.interpreter.get_input_details()
+                    self.output_details = self.interpreter.get_output_details()
+                    print("✅ TFLITE ENGINE READY")
+                except Exception as e:
+                    print(f"❌ TFLITE LOAD ERROR: {e}")
+            else:
+                keras_path = os.path.join(settings.BASE_DIR, 'ml_model', 'bottle_model_multiclass.keras')
+                print(f"🏭 LOADING KERAS MODEL: {keras_path}")
+                try:
+                    self.model = tf.keras.models.load_model(keras_path)
+                    print("✅ KERAS ENGINE READY")
+                except Exception as e:
+                    print(f"❌ KERAS LOAD ERROR: {e}")
+
+        except Exception as e:
+            print(f"❌ CONFIG ERROR: {e}")
 
     def predict_image(self, img_array):
-        """Unified Prediction Method"""
-        if USING_TFLITE and self.interpreter:
-            # TFLite Inference
-            # Ensure input is float32
+        if USE_TFLITE_MODE and self.interpreter:
             input_data = np.array(img_array, dtype=np.float32)
             self.interpreter.set_tensor(self.input_details[0]['index'], input_data)
             self.interpreter.invoke()
             preds = self.interpreter.get_tensor(self.output_details[0]['index'])[0]
             return preds
-            
-        elif not USING_TFLITE and self.model:
-            # Keras Inference
+        elif not USE_TFLITE_MODE and self.model:
             return self.model.predict(img_array, verbose=0)[0]
-        return [0, 0, 1] # Default to Other if fail
+        return [0, 0, 1]
 
-    # ... (Keep release_resources, hard_exit_handler, save_log_to_db, get_focus_object exactly as before) ...
+    def hard_exit_handler(self, signum, frame):
+        print(f"\n☢️ SHUTDOWN SIGNAL RECEIVED...")
+        if self.video and self.video.isOpened(): self.video.release()
+        os._exit(0)
+
+    def save_log_to_db(self, confidence):
+        try:
+            DefectLog.objects.create(confidence=confidence)
+            print(f"📝 LOG SAVED: {confidence:.2f}")
+        except: pass
+
+    def get_focus_object(self, frame):
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        blur = cv2.GaussianBlur(gray, (5, 5), 0)
+        edged = cv2.Canny(blur, 50, 150)
+        kernel = np.ones((5,5), np.uint8)
+        dilated = cv2.dilate(edged, kernel, iterations=1)
+        contours, _ = cv2.findContours(dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        if not contours: return None, 0
+        valid_cnts = [c for c in contours if cv2.contourArea(c) > 5000]
+        if not valid_cnts: return None, 0
+        c = max(valid_cnts, key=cv2.contourArea)
+        return cv2.boundingRect(c), cv2.contourArea(c)
 
     def get_frame(self):
         if not self.initialized: self.initialize()
@@ -108,6 +132,17 @@ class VideoCamera(object):
 
         success, frame = self.video.read()
         if not success: return None
+        
+        # --- SANITY CHECK (Prevents C++ Crash) ---
+        h, w = frame.shape[:2]
+        if w > 1000 or h > 1000: 
+            return None # Skip garbage frame
+            
+        # --- FORCE COLOR (Prevents Tuple Crash) ---
+        if len(frame.shape) == 2:
+            frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
+        elif len(frame.shape) == 3 and frame.shape[2] == 1:
+            frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
 
         rect, area = self.get_focus_object(frame)
         status_msg = "WAITING..."
@@ -131,7 +166,6 @@ class VideoCamera(object):
                     img_array = tf.keras.preprocessing.image.img_to_array(img)
                     img_array = np.expand_dims(img_array, axis=0) / 255.0
                     
-                    # CALL THE UNIFIED PREDICTION METHOD
                     preds = self.predict_image(img_array)
                     
                     current_pred = np.argmax(preds)
@@ -158,8 +192,10 @@ class VideoCamera(object):
         else:
             self.buffer.append(2)
 
-        cv2.rectangle(frame, (0, 0), (1280 if not USING_TFLITE else 640, 60), box_color, -1)
+        cv2.rectangle(frame, (0, 0), (640, 60), box_color, -1)
         cv2.putText(frame, status_msg, (20, 45), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), 2)
-
+        
+        # --- SAFE ENCODING ---
         ret, jpeg = cv2.imencode('.jpg', frame)
+        if not ret: return None
         return jpeg.tobytes()
