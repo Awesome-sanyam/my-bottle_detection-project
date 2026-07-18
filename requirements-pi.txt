@@ -1,0 +1,17 @@
+# Raspberry Pi / Edge Device Requirements
+# Use this file on the Pi instead of requirements.txt
+#
+# Install with: pip install -r requirements-pi.txt
+
+# Django web framework
+Django==4.2.27
+
+# Computer Vision (headless, no GUI)
+opencv-python-headless==4.9.0.80
+numpy==1.26.4
+
+# TFLite Runtime (lightweight, no full TensorFlow needed)
+tflite-runtime==2.14.0
+
+# Utilities
+Pillow==10.3.0

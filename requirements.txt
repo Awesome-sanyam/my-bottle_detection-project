@@ -1,0 +1,14 @@
+# Django web framework
+Django==4.2.27
+
+# Computer Vision
+opencv-python==4.9.0.80
+numpy==1.26.4
+
+# Machine Learning (High-Power Server / Development Machine)
+# Comment these out on Raspberry Pi and use requirements-pi.txt instead
+tensorflow==2.16.1
+scikit-learn==1.4.2
+
+# Utilities
+Pillow==10.3.0

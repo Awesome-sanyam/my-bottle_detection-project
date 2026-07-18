@@ -1,6 +1,52 @@
+# ── Python ──────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ── Virtual Environments ─────────────────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+.env
+
+# ── Django ───────────────────────────────────────────────────────────
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+/staticfiles/
+/mediafiles/
+media/
+
+# ── ML Models (large binary files – use Git LFS or external storage) ─
 ml_model/
 ml_models/
-.venv/
+*.h5
+*.keras
+*.tflite
+*.pb
+*.onnx
+
+# ── Dataset ──────────────────────────────────────────────────────────
+ml_model/dataset/
+dataset/
+
+# ── IDE & OS ─────────────────────────────────────────────────────────
 .vscode/
-db.sqlite3/
-__pycache__/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Docker ───────────────────────────────────────────────────────────
+*.env.local
