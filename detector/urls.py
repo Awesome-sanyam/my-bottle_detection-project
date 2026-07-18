@@ -10,6 +10,6 @@ urlpatterns = [
     path('register/', views.register, name='register'),
     
     # Features
-    path('video_feed', views.video_feed, name='video_feed'),
+    path('video_feed/', views.video_feed, name='video_feed'),
     path('download_csv/', views.download_logs, name='download_logs'),
 ]

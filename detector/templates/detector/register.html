@@ -4,84 +4,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QC-Vision Pro | System Registration</title>
+    <title>QC-Vision Pro | MANAGER Registration</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Reusing the exact same core variables and structure for seamless UX */
         :root {
             --bg-base: #09090b; --panel-bg: #0f1115; --input-bg: #161b22;
-            --border-dim: #1f2937; --cyan: #00e5ff; --text-main: #f8fafc; --text-muted: #8b949e;
+            --border-dim: #1f2937; --cyan: #00e5ff; --text-main: #f8fafc;
+            --text-muted: #8b949e; --red: #ef4444;
         }
-
+        * { box-sizing: border-box; }
         body {
             margin: 0; font-family: 'Inter', sans-serif; background-color: var(--bg-base);
             background-image: radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1px);
             background-size: 30px 30px; color: var(--text-main);
-            display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; min-height: 100vh; padding: 2rem 1rem;
         }
 
         .system-header { text-align: center; margin-bottom: 2rem; }
         .icon-box {
-            width: 48px; height: 48px; background: rgba(0, 229, 255, 0.1);
-            border: 1px solid rgba(0, 229, 255, 0.3); border-radius: 12px;
-            display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem auto; color: var(--cyan);
+            width: 48px; height: 48px; background: rgba(0,229,255,0.1);
+            border: 1px solid rgba(0,229,255,0.3); border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 1rem; color: var(--cyan);
         }
         .brand-title { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.5px; margin: 0; }
         .subtitle-wrapper { display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 8px; }
         .subtitle-line { width: 40px; height: 1px; background: var(--border-dim); }
         .subtitle { font-size: 0.75rem; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; }
-        .header-desc { font-size: 0.85rem; color: var(--text-muted); margin-top: 1rem; max-width: 350px; line-height: 1.4; }
+        .header-desc { font-size: 0.85rem; color: var(--text-muted); margin-top: 1rem; max-width: 350px; line-height: 1.5; text-align: center; }
 
         .auth-card {
             background: var(--panel-bg); border: 1px solid var(--border-dim); border-radius: 12px;
             width: 100%; max-width: 480px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); overflow: hidden;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
         }
         .card-body { padding: 2.5rem; }
 
-        .form-group { margin-bottom: 1.5rem; }
-        label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--cyan); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem; }
-        .input-wrapper { position: relative; display: flex; align-items: center; }
-        .input-icon { position: absolute; left: 14px; color: var(--text-muted); width: 18px; height: 18px; }
-        .input-icon-right { position: absolute; right: 14px; color: var(--text-muted); width: 18px; height: 18px; cursor: pointer; }
-        input {
-            width: 100%; padding: 0.85rem 1rem 0.85rem 2.5rem; background: var(--input-bg);
-            border: 1px solid var(--border-dim); border-radius: 8px; color: var(--text-main);
-            font-size: 0.95rem; font-family: 'Inter', sans-serif; transition: all 0.2s; box-sizing: border-box;
+        /* ── Error Banner ── */
+        .error-banner {
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.3);
+            border-radius: 8px;
+            padding: 0.9rem 1rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.82rem;
+            color: var(--red);
         }
-        input:focus { outline: none; border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan); }
+        .error-banner ul { margin: 0; padding-left: 1.2rem; }
+        .error-banner li { margin-top: 3px; }
 
-        /* SECURITY CHECKLIST */
-        .security-box {
-            background: rgba(0, 229, 255, 0.05); border: 1px solid rgba(0, 229, 255, 0.15);
-            border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;
+        /* ── Form fields (Django-rendered) ── */
+        .form-group { margin-bottom: 1.5rem; }
+        .form-group label {
+            display: block; font-size: 0.75rem; font-weight: 700;
+            color: var(--cyan); text-transform: uppercase;
+            letter-spacing: 1px; margin-bottom: 0.5rem;
         }
-        .security-title { font-size: 0.65rem; color: var(--cyan); text-transform: uppercase; font-weight: 700; letter-spacing: 1px; margin-bottom: 0.8rem; }
-        .check-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .check-item { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: var(--text-muted); }
-        .check-icon { width: 12px; height: 12px; color: var(--cyan); }
+        .form-group input[type="text"],
+        .form-group input[type="password"] {
+            width: 100%; padding: 0.85rem 1rem;
+            background: var(--input-bg); border: 1px solid var(--border-dim);
+            border-radius: 8px; color: var(--text-main);
+            font-size: 0.95rem; font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+        }
+        .form-group input:focus { outline: none; border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan); }
+        .field-help { font-size: 0.72rem; color: var(--text-muted); margin-top: 5px; line-height: 1.4; }
+        .field-error { font-size: 0.72rem; color: var(--red); margin-top: 5px; }
 
         .btn-submit {
             width: 100%; padding: 1rem; background: var(--cyan); color: #000;
-            border: none; border-radius: 8px; font-weight: 700; font-size: 0.9rem; letter-spacing: 0.5px;
-            cursor: pointer; transition: all 0.2s; box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
+            border: none; border-radius: 8px; font-weight: 700; font-size: 0.9rem;
+            letter-spacing: 0.5px; cursor: pointer; transition: all 0.2s;
+            box-shadow: 0 0 15px rgba(0,229,255,0.3);
             display: flex; align-items: center; justify-content: center; gap: 8px;
         }
-        .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 0 25px rgba(0, 229, 255, 0.5); }
+        .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 0 25px rgba(0,229,255,0.5); }
 
         .card-footer {
             background: #0d0f12; border-top: 1px solid var(--border-dim); padding: 1rem;
-            text-align: center; font-size: 0.65rem; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase;
+            text-align: center; font-size: 0.65rem; color: var(--text-muted);
+            letter-spacing: 0.5px; text-transform: uppercase;
         }
-        
-        .redirect { text-align: center; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 2rem;}
+
+        .redirect { text-align: center; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 2rem; }
         .redirect a { color: var(--cyan); text-decoration: none; font-weight: 600; }
+        .redirect a:hover { text-decoration: underline; }
 
         .page-footer {
-            display: flex; justify-content: space-around; font-size: 0.75rem; color: var(--text-muted);
-            max-width: 800px; width: 100%; border-top: 1px solid var(--border-dim); padding-top: 1.5rem; margin-bottom: 2rem;
+            display: flex; justify-content: space-around; flex-wrap: wrap; gap: 1rem;
+            font-size: 0.75rem; color: var(--text-muted);
+            max-width: 800px; width: 100%; border-top: 1px solid var(--border-dim); padding-top: 1.5rem;
         }
-        .page-footer a { color: var(--text-muted); text-decoration: none; margin: 0 10px; }
     </style>
 </head>
 <body>
@@ -90,57 +105,52 @@
         <div class="icon-box">
             <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><circle cx="12" cy="10" r="3"/></svg>
         </div>
-        <h1 class="brand-title">Manager Registration</h1>
+        <h1 class="brand-title">MANAGER (Admin) Registration</h1>
         <div class="subtitle-wrapper">
             <div class="subtitle-line"></div>
             <div class="subtitle">Mission Critical Authorization</div>
             <div class="subtitle-line"></div>
         </div>
-        <div class="header-desc">Establish administrative credentials for high-precision industrial oversight.</div>
+        <p class="header-desc">Establish MANAGER credentials for high-precision industrial oversight.</p>
     </div>
 
     <div class="auth-card">
         <div class="card-body">
+
+            {% if form.errors %}
+            <div class="error-banner">
+                <strong>⚠ Registration Failed — Please fix the following:</strong>
+                <ul>
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
             <form method="post" action="{% url 'register' %}">
                 {% csrf_token %}
-                
-                <div class="form-group">
-                    <label>Username</label>
-                    <div class="input-wrapper">
-                        <svg class="input-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg>
-                        <input type="text" name="username" placeholder="admin_user_01" required autocomplete="off">
-                    </div>
-                </div>
 
+                {% for field in form %}
                 <div class="form-group">
-                    <label>Master Password</label>
-                    <div class="input-wrapper">
-                        <svg class="input-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2zM7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                        <input type="password" name="password" placeholder="••••••••" required>
-                        <svg class="input-icon-right" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                    </div>
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <div class="field-help">{{ field.help_text }}</div>
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <div class="field-error">{{ error }}</div>
+                    {% endfor %}
                 </div>
-
-                <div class="form-group">
-                    <label>Confirm Master Password</label>
-                    <div class="input-wrapper">
-                        <svg class="input-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        <input type="password" name="password_confirm" placeholder="••••••••" required>
-                    </div>
-                </div>
-
-                <div class="security-box">
-                    <div class="security-title">Security Protocol Requirements</div>
-                    <div class="check-grid">
-                        <div class="check-item"><svg class="check-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg> Minimum 8 characters</div>
-                        <div class="check-item"><svg class="check-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg> Alphanumeric combo</div>
-                        <div class="check-item"><svg class="check-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg> Special character</div>
-                        <div class="check-item"><svg class="check-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg> One uppercase letter</div>
-                    </div>
-                </div>
+                {% endfor %}
 
                 <button type="submit" class="btn-submit">
-                    INITIALIZE REGISTRATION 
+                    INITIALIZE REGISTRATION
                     <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 </button>
             </form>
@@ -151,12 +161,12 @@
     </div>
 
     <div class="redirect">
-        Already have a management profile? <a href="{% url 'login' %}">Authenticate here</a>
+        Already a USER or MANAGER? <a href="{% url 'login' %}">Authenticate here</a>
     </div>
 
     <div class="page-footer">
         <div>© 2026 QC-Vision Pro Industrial Systems. All operations logged.</div>
-        <div><a href="#">Terms of Service</a> | <a href="#">Security Manual</a></div>
+        <div><a href="#" style="color:var(--text-muted); text-decoration:none;">Terms of Service</a></div>
     </div>
 
 </body>

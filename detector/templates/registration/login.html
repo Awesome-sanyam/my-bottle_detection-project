@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QC-Vision Pro | Operator Access</title>
+    <title>QC-Vision Pro | USER Login</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -152,28 +152,33 @@
 
     <div class="auth-card">
         <div class="card-body">
-            <h2 class="card-title">Operator Access</h2>
+            <h2 class="card-title">USER Login</h2>
             <p class="card-desc">Please authenticate to access the terminal.</p>
+
+            {% if form.errors %}
+            <div style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:8px; padding:0.9rem 1rem; margin-bottom:1.5rem; font-size:0.82rem; color:#ef4444;">
+                ⚠ Invalid USER ID or security key. Please try again.
+            </div>
+            {% endif %}
 
             <form method="post" action="{% url 'login' %}">
                 {% csrf_token %}
                 <div class="form-group">
-                    <div class="label-row"><label>Operator Identity</label></div>
+                    <div class="label-row"><label>USER (Operator) Identity</label></div>
                     <div class="input-wrapper">
                         <svg class="input-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg>
-                        <input type="text" name="username" placeholder="Enter operator ID" required autocomplete="off">
+                        <input type="text" name="username" placeholder="Enter operator ID" required autocomplete="off" value="{{ form.username.value|default:'' }}">
                     </div>
                 </div>
 
                 <div class="form-group">
                     <div class="label-row">
                         <label>Security Key</label>
-                        <a href="#" class="link-text">EMERGENCY RESET?</a>
                     </div>
                     <div class="input-wrapper">
                         <svg class="input-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2zM7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                        <input type="password" name="password" placeholder="••••••••" required>
-                        <svg class="input-icon-right" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        <input type="password" id="pwField" name="password" placeholder="••••••••" required>
+                        <svg class="input-icon-right" onclick="togglePw()" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                     </div>
                 </div>
 
@@ -186,7 +191,7 @@
             <div class="divider">PROTOCOL V2.4.0</div>
             
             <div class="redirect">
-                New Manager? <a href="{% url 'register' %}">Register Terminal</a>
+                New MANAGER? <a href="{% url 'register' %}">Register Admin Account</a>
             </div>
         </div>
         
@@ -203,6 +208,13 @@
             <a href="#">Terms of Service</a> | <a href="#">Security Manual</a>
         </div>
     </div>
+
+<script>
+function togglePw() {
+    const f = document.getElementById('pwField');
+    f.type = f.type === 'password' ? 'text' : 'password';
+}
+</script>
 
 </body>
 </html>

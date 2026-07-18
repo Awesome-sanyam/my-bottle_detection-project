@@ -1,119 +1,441 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QC-Vision Pro | Command Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { 
-            background-color: #121212; 
-            color: #e0e0e0; 
-            font-family: 'Segoe UI', Roboto, Helvetica, sans-serif; 
-            margin: 0; 
-            overflow-x: hidden;
+        :root {
+            --bg-base: #09090b;
+            --panel-bg: #0f1115;
+            --panel-alt: #1a1d23;
+            --border: #1f2937;
+            --cyan: #00e5ff;
+            --green: #10b981;
+            --orange: #f59e0b;
+            --red: #ef4444;
+            --text-main: #f8fafc;
+            --text-muted: #8b949e;
         }
-        .header { 
-            background-color: #1f1f1f; 
-            padding: 15px 30px; 
-            border-bottom: 3px solid #00d2ff; 
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-base);
+            background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+            background-size: 30px 30px;
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        /* ── TOP NAVBAR ── */
+        .navbar {
+            background: var(--panel-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            height: 60px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.4);
         }
-        .header h1 { margin: 0; font-weight: 300; letter-spacing: 1px; }
-        .badge { 
-            background: #00d2ff; color: #000; 
-            padding: 5px 10px; border-radius: 4px; 
-            font-weight: bold; font-size: 0.8rem; 
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
-        .container { 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            margin-top: 30px; 
-        }
-        .video-container {
-            position: relative;
-            border: 5px solid #333;
+        .nav-icon {
+            width: 36px; height: 36px;
+            background: rgba(0, 229, 255, 0.1);
+            border: 1px solid rgba(0, 229, 255, 0.3);
             border-radius: 8px;
-            box-shadow: 0 0 30px rgba(0, 210, 255, 0.1);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--cyan);
+        }
+        .nav-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+        .nav-title span { color: var(--cyan); }
+        .nav-badge {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            color: var(--green);
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .live-dot {
+            width: 7px; height: 7px;
+            background: var(--green);
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .nav-user {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        .nav-user strong { color: var(--text-main); }
+
+        .btn-nav {
+            padding: 7px 14px;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            text-decoration: none;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-download {
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            color: var(--orange);
+        }
+        .btn-download:hover { background: rgba(245, 158, 11, 0.25); }
+
+        .btn-admin {
+            background: rgba(0, 229, 255, 0.1);
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            color: var(--cyan);
+        }
+        .btn-admin:hover { background: rgba(0, 229, 255, 0.2); }
+
+        .btn-logout {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: var(--red);
+        }
+        .btn-logout:hover { background: rgba(239, 68, 68, 0.2); }
+
+        /* ── MAIN LAYOUT ── */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 1.5rem;
+            padding: 1.5rem 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* ── VIDEO PANEL ── */
+        .video-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
             overflow: hidden;
         }
-        /* Ensure image fits typically 1280x720 aspect ratio */
-        .video-feed { 
+        .panel-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .panel-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .video-wrapper {
+            position: relative;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 300px;
+        }
+        .video-feed {
             display: block;
             width: 100%;
-            max-width: 960px; 
             height: auto;
+            max-height: 520px;
+            object-fit: contain;
         }
-        .stats-panel { 
-            margin-top: 20px; 
-            padding: 20px; 
-            background: #1f1f1f; 
-            border-radius: 8px; 
-            width: 90%;
-            max-width: 960px;
+        .no-camera-msg {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+        }
+        .no-camera-msg svg { margin-bottom: 1rem; opacity: 0.3; }
+        .no-camera-msg p { font-size: 0.85rem; }
+
+        /* ── STATS BAR ── */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            border-top: 1px solid var(--border);
+        }
+        .stat-item {
+            padding: 1rem 1.5rem;
+            text-align: center;
+            border-right: 1px solid var(--border);
+        }
+        .stat-item:last-child { border-right: none; }
+        .stat-label {
+            display: block;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+        .stat-value {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+        .val-cyan { color: var(--cyan); }
+        .val-orange { color: var(--orange); }
+        .val-green { color: var(--green); }
+        .val-white { color: var(--text-main); }
+
+        /* ── SIDEBAR ── */
+        .sidebar { display: flex; flex-direction: column; gap: 1.5rem; }
+
+        .side-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .side-card-header {
+            padding: 0.9rem 1.2rem;
+            border-bottom: 1px solid var(--border);
             display: flex;
-            justify-content: space-around;
-            border-top: 2px solid #333;
+            align-items: center;
+            justify-content: space-between;
         }
-        .stat-item { text-align: center; }
-        .stat-label { display: block; font-size: 0.8rem; color: #888; }
-        .stat-value { font-size: 1.2rem; font-weight: bold; color: #fff; }
+        .side-card-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* ── DEFECT LOG ── */
+        .defect-list { padding: 0; list-style: none; }
+        .defect-item {
+            padding: 0.9rem 1.2rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .defect-item:last-child { border-bottom: none; }
+        .defect-dot {
+            width: 8px; height: 8px;
+            background: var(--red);
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .defect-info { flex: 1; min-width: 0; }
+        .defect-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+        .defect-conf {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--red);
+        }
+        .no-defects {
+            padding: 2rem 1.2rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.82rem;
+        }
+        .no-defects svg { display: block; margin: 0 auto 0.8rem auto; opacity: 0.3; }
+
+        /* ── SYSTEM STATUS CARD ── */
+        .status-list { padding: 0.5rem 0; }
+        .status-row {
+            padding: 0.7rem 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.82rem;
+        }
+        .status-key { color: var(--text-muted); }
+        .status-val { font-weight: 600; }
+        .chip {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+        .chip-green { background: rgba(16,185,129,0.15); color: var(--green); }
+        .chip-cyan  { background: rgba(0,229,255,0.1);   color: var(--cyan); }
+        .chip-orange{ background: rgba(245,158,11,0.15); color: var(--orange); }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>QC-Vision <span style="font-weight:bold;">PRO</span></h1>
-        <span class="badge">LIVE • FOG SERVER</span>
+
+    <!-- ── NAVBAR ── -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <div class="nav-icon">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-4"/></svg>
+            </div>
+            <span class="nav-title">QC-Vision <span>PRO</span></span>
+            <span class="nav-badge"><span class="live-dot"></span>Live</span>
+        </div>
+
+        <div class="nav-right">
+            <span class="nav-user">Operator: <strong>{{ request.user.username }}</strong></span>
+            <a href="{% url 'download_logs' %}" class="btn-nav btn-download">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                Export CSV
+            </a>
+            {% if request.user.is_staff %}
+            <a href="/admin/live-monitor/" class="btn-nav btn-admin">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Admin Monitor
+            </a>
+            <a href="/admin/" class="btn-nav btn-admin" style="opacity:0.7;">
+                Admin Panel
+            </a>
+            {% endif %}
+            <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn-nav btn-logout">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+                    Logout
+                </button>
+            </form>
+        </div>
+    </nav>
+
+    <!-- ── MAIN CONTENT ── -->
+    <div class="main-content">
+
+        <!-- LEFT: Video + Stats -->
+        <div class="video-panel">
+            <div class="panel-header">
+                <span class="panel-title">📷 Live Camera Feed</span>
+                <span class="nav-badge"><span class="live-dot"></span>Streaming</span>
+            </div>
+
+            <div class="video-wrapper">
+                <img src="{% url 'video_feed' %}" class="video-feed" alt="Live Camera Feed"
+                     onerror="this.style.display='none'; document.getElementById('no-cam').style.display='block';">
+                <div id="no-cam" style="display:none;" class="no-camera-msg">
+                    <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M16 16v1a2 2 0 01-2 2H3a2 2 0 01-2-2V7a2 2 0 012-2h2m5.66 0H14a2 2 0 012 2v3.34l1 1L23 7v10"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                    <p>Camera feed unavailable.<br>Connect a camera and restart the server.</p>
+                </div>
+            </div>
+
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <span class="stat-label">Model</span>
+                    <span class="stat-value val-cyan">MobileNetV2</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Mode</span>
+                    <span class="stat-value val-orange">Multi-Class</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Buffer</span>
+                    <span class="stat-value val-white">15 Frames</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Detection</span>
+                    <span class="stat-value val-green">Auto-Crop</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Sidebar -->
+        <div class="sidebar">
+
+            <!-- Defect Log -->
+            <div class="side-card">
+                <div class="side-card-header">
+                    <span class="side-card-title">🚨 Defect Log (Live)</span>
+                    <span style="font-size:0.7rem; color:var(--text-muted);">Last 10</span>
+                </div>
+                <ul class="defect-list">
+                    {% for log in logs %}
+                    <li class="defect-item">
+                        <div class="defect-dot"></div>
+                        <div class="defect-info">
+                            <div class="defect-time">{{ log.timestamp|date:"d M Y, H:i:s" }}</div>
+                            <div class="defect-conf">Confidence: {{ log.confidence|floatformat:2 }}</div>
+                        </div>
+                    </li>
+                    {% empty %}
+                    <li class="no-defects">
+                        <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        No defects recorded yet.<br>All bottles are passing.
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <!-- System Status -->
+            <div class="side-card">
+                <div class="side-card-header">
+                    <span class="side-card-title">⚙️ System Status</span>
+                </div>
+                <div class="status-list">
+                    <div class="status-row">
+                        <span class="status-key">Platform</span>
+                        <span class="status-val chip chip-cyan">Keras Server</span>
+                    </div>
+                    <div class="status-row">
+                        <span class="status-key">Database</span>
+                        <span class="status-val chip chip-green">SQLite • Online</span>
+                    </div>
+                    <div class="status-row">
+                        <span class="status-key">Auth</span>
+                        <span class="status-val chip chip-green">Authenticated</span>
+                    </div>
+                    <div class="status-row">
+                        <span class="status-key">Defect Trigger</span>
+                        <span class="status-val chip chip-orange">4 / 15 frames</span>
+                    </div>
+                    <div class="status-row">
+                        <span class="status-key">Log Cooldown</span>
+                        <span class="status-val" style="color:var(--text-main)">5 seconds</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
     </div>
 
-    <div class="container">
-        <div class="video-container">
-            <img src="{% url 'video_feed' %}" class="video-feed" alt="Live Camera Feed">
-        </div>
-        
-        <div class="stats-panel">
-            <div class="stat-item">
-                <span class="stat-label">Model Architecture</span>
-                <span class="stat-value" style="color: #00d2ff;">MobileNetV2</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">Logic Mode</span>
-                <span class="stat-value" style="color: #ff9800;">Multi-Class</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">Stability Buffer</span>
-                <span class="stat-value">15 Frames</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">Detection Zone</span>
-                <span class="stat-value">Auto-Crop</span>
-            </div>
-        </div>
-    </div>
+    <script>
+        // Auto-refresh defect log every 10 seconds
+        setTimeout(() => window.location.reload(), 10000);
+    </script>
+
 </body>
 </html>
-
-<div class="header">
-    <h1>QC-Vision <span style="font-weight:bold;">PRO</span></h1>
-    <div>
-        <a href="{% url 'download_logs' %}" style="background:#ff9800; color:white; text-decoration:none; padding:5px 15px; border-radius:4px; margin-right:10px;">📥 Download Report</a>
-        <form action="{% url 'logout' %}" method="post" style="display:inline;">
-            {% csrf_token %}
-            <button type="submit" style="background:#333; color:white; border:none; padding:5px 10px; cursor:pointer;">Logout</button>
-        </form>
-    </div>
-</div>
-
-<div class="stats-panel" style="display:block;">
-    <h3 style="border-bottom:1px solid #444; padding-bottom:10px;">Recent Defects (Live Log)</h3>
-    <ul style="list-style:none; padding:0;">
-        {% for log in logs %}
-            <li style="padding:10px; border-bottom:1px solid #333; color:#ff5252;">
-                <strong>{{ log.timestamp }}</strong> - Confidence: {{ log.confidence|floatformat:2 }}
-            </li>
-        {% empty %}
-            <li style="padding:10px; color:#666;">No defects recorded yet.</li>
-        {% endfor %}
-    </ul>
-</div>

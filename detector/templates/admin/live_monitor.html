@@ -1,0 +1,207 @@
+{% extends "admin/base_site.html" %}
+{% block title %}Live Camera Monitor | QC-Vision Admin{% endblock %}
+
+{% block content %}
+<style>
+    #content { padding: 0 !important; }
+    .monitor-wrap {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 0;
+        height: calc(100vh - 60px);
+        background: #09090b;
+        overflow: hidden;
+    }
+    /* ── Video Side ── */
+    .cam-panel {
+        display: flex;
+        flex-direction: column;
+        background: #000;
+        border-right: 1px solid #1f2937;
+    }
+    .cam-header {
+        padding: 12px 20px;
+        background: #0f1115;
+        border-bottom: 1px solid #1f2937;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .cam-title { color: #f8fafc; font-size: 0.85rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+    .live-chip {
+        background: rgba(16,185,129,0.15);
+        border: 1px solid rgba(16,185,129,0.4);
+        color: #10b981;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 0.65rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+    }
+    .live-dot {
+        width: 7px; height: 7px;
+        background: #10b981; border-radius: 50%;
+        display: inline-block; margin-right: 5px;
+        animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    .video-area {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        background: #050507;
+    }
+    .video-area img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        display: block;
+    }
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        border-top: 1px solid #1f2937;
+        background: #0f1115;
+    }
+    .s-item {
+        padding: 10px 16px;
+        text-align: center;
+        border-right: 1px solid #1f2937;
+    }
+    .s-item:last-child { border-right: none; }
+    .s-label { display: block; font-size: 0.65rem; color: #6b7280; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+    .s-val { font-size: 0.9rem; font-weight: 700; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+        background: #0f1115;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    .sb-header {
+        padding: 12px 16px;
+        border-bottom: 1px solid #1f2937;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #8b949e;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        display: flex;
+        justify-content: space-between;
+    }
+    .log-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0;
+        margin: 0;
+        list-style: none;
+    }
+    .log-item {
+        padding: 10px 16px;
+        border-bottom: 1px solid #1a1d23;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .log-dot { width: 8px; height: 8px; background: #ef4444; border-radius: 50%; flex-shrink: 0; }
+    .log-time { font-size: 0.7rem; color: #6b7280; }
+    .log-conf { font-size: 0.82rem; font-weight: 600; color: #ef4444; }
+    .log-empty { padding: 2rem 16px; text-align: center; color: #374151; font-size: 0.8rem; }
+
+    .sys-status { border-top: 1px solid #1f2937; }
+    .sys-row {
+        padding: 9px 16px;
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.78rem;
+        border-bottom: 1px solid #1a1d23;
+    }
+    .sys-key { color: #6b7280; }
+    .chip {
+        padding: 2px 7px; border-radius: 4px;
+        font-size: 0.65rem; font-weight: 700;
+    }
+    .chip-g { background: rgba(16,185,129,.15); color:#10b981; }
+    .chip-c { background: rgba(0,229,255,.1);   color:#00e5ff; }
+    .chip-o { background: rgba(245,158,11,.15); color:#f59e0b; }
+
+    /* back link */
+    .back-bar {
+        background: #0f1115;
+        border-bottom: 1px solid #1f2937;
+        padding: 8px 20px;
+    }
+    .back-bar a {
+        color: #00e5ff; font-size: 0.78rem; text-decoration: none;
+        display: inline-flex; align-items: center; gap: 6px;
+    }
+    .back-bar a:hover { text-decoration: underline; }
+</style>
+
+<div class="back-bar">
+    <a href="{% url 'admin:index' %}">
+        ← Back to Admin Panel
+    </a>
+    &nbsp;|&nbsp;
+    <a href="{% url 'download_logs' %}">📥 Export Defect CSV</a>
+</div>
+
+<div class="monitor-wrap">
+    <!-- Camera Feed -->
+    <div class="cam-panel">
+        <div class="cam-header">
+            <span class="cam-title">📷 Live Camera Feed (Admin View)</span>
+            <span class="live-chip"><span class="live-dot"></span>STREAMING</span>
+        </div>
+        <div class="video-area">
+            <img src="{% url 'video_feed' %}"
+                 alt="Live Camera Feed"
+                 onerror="this.src=''; this.alt='Camera offline — connect a camera and restart server';">
+        </div>
+        <div class="stats-row">
+            <div class="s-item"><span class="s-label">Model</span><span class="s-val" style="color:#00e5ff">MobileNetV2</span></div>
+            <div class="s-item"><span class="s-label">Mode</span><span class="s-val" style="color:#f59e0b">Multi-Class</span></div>
+            <div class="s-item"><span class="s-label">Buffer</span><span class="s-val" style="color:#f8fafc">15 Frames</span></div>
+            <div class="s-item"><span class="s-label">Trigger</span><span class="s-val" style="color:#10b981">4 Frames</span></div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sb-header">
+            <span>🚨 Defect Log</span>
+            <span style="color:#4b5563">Last 20</span>
+        </div>
+        <ul class="log-list">
+            {% for log in logs %}
+            <li class="log-item">
+                <div class="log-dot"></div>
+                <div>
+                    <div class="log-time">{{ log.timestamp|date:"d M Y, H:i:s" }}</div>
+                    <div class="log-conf">Confidence: {{ log.confidence|floatformat:2 }}</div>
+                </div>
+            </li>
+            {% empty %}
+            <li class="log-empty">✅ No defects logged yet.<br>System is running clean.</li>
+            {% endfor %}
+        </ul>
+
+        <div class="sys-status">
+            <div class="sb-header"><span>⚙️ System Info</span></div>
+            <div class="sys-row"><span class="sys-key">Platform</span><span class="chip chip-c">{{ platform }}</span></div>
+            <div class="sys-row"><span class="sys-key">Auth</span><span class="chip chip-g">Admin Verified</span></div>
+            <div class="sys-row"><span class="sys-key">DB</span><span class="chip chip-g">SQLite • Online</span></div>
+            <div class="sys-row"><span class="sys-key">Cooldown</span><span class="chip chip-o">5 seconds</span></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Auto-refresh page every 15s to update defect log
+    setTimeout(() => location.reload(), 15000);
+</script>
+{% endblock %}
